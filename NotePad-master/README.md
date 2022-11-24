@@ -1,136 +1,135 @@
 # NotePad Android期中实验
 
-### 1. NoteList界面中笔记条目增加时间戳显示
+### 1. 时间戳功能
 
 - #### 思路
 
-  ①（1）修改NotesList.java中PROJECTION的内容，添加modif字段，使其在后面的搜索中才能从SQLite中读取修改时间的字段。
+  1.在主页面的每个列表项中添加时间戳的位置，即在notelist_item.xml布局文件中添加一个
 
-  （2）实验代码：
 
+  ```xml
+  <TextView
+        android:id="@+id/text2"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:textSize="12dp"
+        android:gravity="center_vertical"
+        android:paddingLeft="10dip"
+        android:singleLine="true"
+        android:layout_weight="1"
+        android:layout_margin="0dp"
+        />  
+
+  ```
+  2.需要修改这个方法中的时间戳格式NotePadProvider中的insert方法:
+  
+  ```java
+    Long now = Long.valueOf(System.currentTimeMillis());
+   //修改 需要将毫秒数转换为时间的形式yy.MM.dd HH:mm:ss
+
+   Date date = new Date(now);
+
+   SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yy-MM-dd HH:mm:ss");
+
+    String dateFormat = simpleDateFormat.format(date);
+    //转换为yy.MM.dd HH:mm:ss形式的时间
+
+     if(values.containsKey(NotePad.Notes.COLUMN_NAME_CREATE_DATE) == false) {
+        values.put(NotePad.Notes.COLUMN_NAME_CREATE_DATE, dateFormat);
+     }
+
+     if (values.containsKey(NotePad.Notes.COLUMN_NAME_MODIFICATION_DATE) == false) {
+         values.put(NotePad.Notes.COLUMN_NAME_MODIFICATION_DATE, dateFormat);
+    } 
+
+  ```
+  3.NoteEditor中的updateNote方法:
+
+  ```java
+   long now = System.currentTimeMillis();
+   Date date = new Date(now);
+   SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yy-MM-dd HH:mm:ss");
+    String dateFormat = simpleDateFormat.format(date);
+   values.put(NotePad.Notes.COLUMN_NAME_MODIFICATION_DATE, dateFormat);
+   
+  ```
+  4.NoteList的修改  如果我们要加入时间戳，必须要将修改时间的列也投影出来. 所以我们将PROJECTION添加上修改时间：
+  
   ```java
   private static final String[] PROJECTION = new String[] {
             NotePad.Notes._ID, // 0
             NotePad.Notes.COLUMN_NAME_TITLE, // 1
-            //Extended:display time, color
-            NotePad.Notes.COLUMN_NAME_MODIFICATION_DATE, // 2
+            NotePad.Notes.COLUMN_NAME_MODIFICATION_DATE,//添加修改时间
     };
+
   ```
-  ②（1）修改适配器内容，增加dataColumns中装配到ListView的内容，同时增加一个文本框来存放时间。
   
-  （2）实验代码：
+  PROJECTION只是定义了需要被取出来的数据列，而之后用Cursor进行数据库查询，再之后用Adapter进行装填。我们需要将显示列dataColumns和他们的viewIDs加入修改时间这一属性:
   
   ```java
-  final String[] dataColumns = { NotePad.Notes.COLUMN_NAME_TITLE , NotePad.Notes.COLUMN_NAME_MODIFICATION_DATE} ;
-  int[] viewIDs = { android.R.id.text1, R.id.text2};
-  ```
-  ③（1）修改layout文件夹中noteslist_item.xml的内容，增加一个textview组件，为他们添加一个布局。
-  
-  （2）实验代码：
-
-  ```xml
-  <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:paddingLeft="6dip"
-    android:paddingRight="6dip"
-    android:paddingBottom="3dip">
- 
- 
-    <TextView
-        android:id="@android:id/text1"
-        android:layout_width="match_parent"
-        android:layout_height="?android:attr/listPreferredItemHeight"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:gravity="center_vertical"
-        android:paddingLeft="5dip"
-        android:singleLine="true"
-        />
-    <TextView
-        android:id="@+id/text2"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:gravity="center_vertical"
-        android:singleLine="true"
-        />
-  </LinearLayout>
-
+  String[] dataColumns = { NotePad.Notes.COLUMN_NAME_TITLE, NotePad.Notes.COLUMN_NAME_MODIFICATION_DATE }//加入修改时间;
+  int[] viewIDs = { android.R.id.text1, R.id.text2 }//加入修改时间;
 
   ```
-  ④（1）修改NoteEditor.java中updateNote方法中的时间类型。
-  
-  （2）实验代码：
-  
-  ```java
-  private final void updateNote(String text, String title) {
- 
-        // Sets up a map to contain values to be updated in the provider.
-        ContentValues values = new ContentValues();
-        Long now = Long.valueOf(System.currentTimeMillis());
-        SimpleDateFormat sf = new SimpleDateFormat("yy/MM/dd HH:mm");
-        Date d = new Date(now);
-        String format = sf.format(d);
-        values.put(NotePad.Notes.COLUMN_NAME_MODIFICATION_DATE, format);
+  5.实验结果如下图：
+
+- <img src="https://github.com/xiaoguowasd/Android/blob/main/image/%E6%97%B6%E9%97%B4%E6%88%B3.png" alt="avatar" style="zoom:50%; width:750px" />
 
 
-  ```
-  ⑤实验结果如下图：
-
-- <img src="https://github.com/17515424731/Android/blob/main/image/n1.png" alt="avatar" style="zoom:50%; width:750px" />
-
-
-### 2. 添加笔记查询功能
+### 2. 搜索功能
 - #### 思路
 
-  ①（1）搜索组件在主页面的菜单选项中，在list_options_menu.xml布局文件中添加搜索功能。
+ 1.搜索组件在主页面的菜单选项中，所以应在list_options_menu.xml布局文件中添加搜索功能
 
-  （2）实验代码：
-
+ 
   ```xml
       <item
-        android:id="@+id/menu_search"
-        android:icon="@android:drawable/ic_menu_search"
-        android:title="@string/menu_search"
-        android:showAsAction="always" />
+      android:id="@+id/menu_search"
+      android:icon="@android:drawable/ic_menu_search"
+      android:title="@string/menu_search"
+      android:showAsAction="always" />
+
   ```
-  ②（1）新建一个查找笔记内容的布局文件note_search.xml。
-  
-  （2）实验代码：
+  2.新建一个查找笔记内容的布局文件note_search.xml
+
   
   ```xml
     <?xml version="1.0" encoding="utf-8"?>
-    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+   <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    >
+
     <SearchView
-        android:id="@+id/search_view"
+        android:id="@+id/search"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:iconifiedByDefault="false"
-        />
+        android:iconifiedByDefault="false" />
+
     <ListView
-        android:id="@+id/list_view"
+        android:id="@+id/list"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        />
-    </LinearLayout>
+        android:layout_height="wrap_content" />
+
+   </LinearLayout>
+
   ```
-  ③（1）在NotesList.java中的onOptionsItemSelected方法中添加search查询的处理。
+  3.在NoteList类中的onOptionsItemSelected方法中添加search查询的处理(跳转)
   
-  （2）实验代码：
 
   ```java
-          case R.id.menu_search:
-        //Find function
-        //startActivity(new Intent(Intent.ACTION_SEARCH, getIntent().getData()));
-          Intent intent = new Intent(this, NoteSearch.class);
-          this.startActivity(intent);
-          return true;
+          
+        case R.id.menu_search:  
+        //查找功能  
+        //startActivity(new Intent(Intent.ACTION_SEARCH, getIntent().getData()));  
+          Intent intent = new Intent(this, NoteSearch.class);  
+          this.startActivity(intent);  
+          return true;  
+
   ```
-  ④（1）新建一个NoteSearch.java用于search功能的功能实现。
+  4.新建一个NoteSearch类用于search功能的功能实现
   
   （2）实验代码：
   
@@ -223,14 +222,13 @@
 
 
   ```
-  ⑤（1）在清单文件AndroidManifest.xml里面注册NoteSearch。
+  5.最后要在清单文件AndroidManifest.xml里面注册NoteSearch,否则无法实现界面的跳转
   
-  （2）实验代码：
   
   ```xml
-            <activity android:name=".NoteSearch" android:label="@string/search_note" />
+            <activity android:name=".NoteSearch" android:label="@string/menu_search" />
   ```
   
    ⑥实验结果如下图：
 
-- <img src="https://github.com/17515424731/Android/blob/main/image/n2.png" alt="avatar" style="zoom:50%; width:750px" />
+- <img src="https://github.com/xiaoguowasd/Android/blob/main/image/%E6%90%9C%E7%B4%A2%E5%8A%9F%E8%83%BD.png" alt="avatar" style="zoom:50%; width:750px" />
