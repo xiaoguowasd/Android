@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # NotePad Android期中实验
 
 ### 1. NoteList界面中笔记条目增加时间戳显示
@@ -926,3 +927,12 @@
 
 - <img src="https://github.com/17515424731/Android/blob/main/image/n15.png" alt="avatar" style="zoom:50%; width:750px" />
 
+=======
+# NotePad
+This is an AndroidStudio rebuild of google SDK sample NotePad
+
+
+![image](https://github.com/xiaoguowasd/Android/blob/main/image/%E6%97%B6%E9%97%B4%E6%88%B3.png)
+
+![image](https://github.com/xiaoguowasd/Android/blob/main/image/%E6%90%9C%E7%B4%A2%E5%8A%9F%E8%83%BD.png)
+>>>>>>> 3e5df07febda93f5bdb41e8ea3fc21319034cf1b
